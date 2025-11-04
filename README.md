@@ -28,33 +28,7 @@ Note: This will run the frontend in the development server. To run in production
 
 
 
-## Create repository (if not exists) and authenticate Docker to ECR:
 
-REPO=frontend
-aws ecr describe-repositories --repository-names $REPO --region $AWS_REGION >/dev/null 2>&1 || \
-  aws ecr create-repository --repository-name $REPO --region $AWS_REGION
-
-aws ecr get-login-password --region $AWS_REGION | \
-  docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-
-## Build, tag, push (repeat per service; adjust Dockerfile path and REPO):
-### Frontend
-REPO=frontend
-docker build -t $REPO -f /workspaces/SampleMERNwithMicroservices/frontend/Dockerfile /workspaces/SampleMERNwithMicroservices/frontend
-docker tag $REPO:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
-docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
-
-### Hello service
-REPO=hello-service
-docker build -t $REPO -f /workspaces/SampleMERNwithMicroservices/backend/helloService/Dockerfile /workspaces/SampleMERNwithMicroservices/backend/helloService
-docker tag $REPO:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
-docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
-
-### Profile service
-REPO=profile-service
-docker build -t $REPO -f /workspaces/SampleMERNwithMicroservices/backend/profileService/Dockerfile /workspaces/SampleMERNwithMicroservices/backend/profileService
-docker tag $REPO:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
-docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
 
 04/11/2025:
 ## Step 1. Set Up AWS CLI and Boto3:
@@ -73,15 +47,59 @@ docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
 
    - **Build Docker images** for the frontend and backend.
 
-   - **Create an Amazon ECR repository** for each image.
-     > REPO=frontend
-     > aws ecr describe-repositories --repository-names $REPO --region $AWS_REGION >/dev/null 2>&1 || \
-     > aws ecr create-repository --repository-name $REPO --region $AWS_REGION
+
+      ECR registry details
+      #### registry_id = "975050024946"
+      #### repository_id = "sample-mern-repo"
+      #### repository_url = "975050024946.dkr.ecr.ca-central-1.amazonaws.com/sample-mern-repo"
+      ---------------------------------------------------------------------
   - Get login details:
     > aws ecr get-login-password --region $AWS_REGION | \
-    > docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+     docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\
+
+example:
+   > aws ecr get-login-password --region ca-central-1 |   docker login --username AWS --password-stdin 975050024946.dkr.ecr.ca-central-1.amazonaws.com
+
+   - **Create an Amazon ECR repository** for each image.
+     > AWS_REGION=ca-central-1\
+     > REPO=frontend\
+     > aws ecr describe-repositories --repository-names $REPO --region $AWS_REGION >/dev/null 2>&1 ||   aws ecr create-repository --repository-name $REPO --region $AWS_REGION\
+
+     > REPO=hello-service\
+     > aws ecr describe-repositories --repository-names $REPO --region $AWS_REGION >/dev/null 2>&1 ||   aws ecr create-repository --repository-name $REPO --region $AWS_REGION\
+
+     > REPO=profile-service\
+     > aws ecr describe-repositories --repository-names $REPO --region $AWS_REGION >/dev/null 2>&1 ||   aws ecr create-repository --repository-name $REPO --region $AWS_REGION
+
 
    - **Push the Docker images** to their respective ECR repositories.
+   > docker login
+
+   ### Frontend
+   REPO=frontend\
+   docker build -t $REPO -f /workspaces/SampleMERNwithMicroservices/frontend/Dockerfile /workspaces/SampleMERNwithMicroservices/frontend\
+   docker tag $REPO:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest\
+example: docker tag $REPO:latest 975050024946.dkr.ecr.ca-central-1.amazonaws.com/${REPO}:latest
+   docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest\
+   example: docker push 975050024946.dkr.ecr.ca-central-1.amazonaws.com/${REPO}:latest
+
+   ### Hello service
+   REPO=hello-service\
+   docker build -t $REPO -f /workspaces/SampleMERNwithMicroservices/backend/helloService/Dockerfile /workspaces/SampleMERNwithMicroservices/backend/helloService\
+   example: docker build -t $REPO -f ./backend/helloService/Dockerfile ./backend/helloService
+   docker tag $REPO:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest\
+   example: docker tag $REPO:latest 975050024946.dkr.ecr.ca-central-1.amazonaws.com/${REPO}:latest
+   docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
+   example: docker push 975050024946.dkr.ecr.ca-central-1.amazonaws.com/${REPO}:latest
+
+   ### Profile service
+   REPO=profile-service
+   docker build -t $REPO -f /workspaces/SampleMERNwithMicroservices/backend/profileService/Dockerfile /workspaces/SampleMERNwithMicroservices/backend/profileService
+   example: docker build -t $REPO -f ./backend/profileService/Dockerfile ./backend/profileService
+   docker tag $REPO:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
+   example: docker tag $REPO:latest 975050024946.dkr.ecr.ca-central-1.amazonaws.com/${REPO}:latest
+   docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
+   example: docker push 975050024946.dkr.ecr.ca-central-1.amazonaws.com/${REPO}:latest
 
 Step 3: Version Control
 
