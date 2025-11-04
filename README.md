@@ -57,7 +57,7 @@ docker tag $REPO:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${
 docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
 
 04/11/2025:
-## 1. Set Up AWS CLI and Boto3:
+## Step 1. Set Up AWS CLI and Boto3:
    - **Install AWS CLI and configure it with AWS credentials.**
 
    - **Install Boto3 for Python and configure it.**
