@@ -63,19 +63,25 @@ docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:latest
    - **Install Boto3 for Python and configure it.**
      > pip install boto3
 
-Step 2: Prepare the MERN Application
+## Step 2: Prepare the MERN Application
 
-1. Containerize the MERN Application:
+### 1. Containerize the MERN Application:
 
-   - Ensure the MERN application is containerized using Docker. Create a Dockerfile for each component (frontend and backend).
+   - **Ensure the MERN application is containerized using Docker**. Create a Dockerfile for each component (frontend and backend).
 
-2. Push Docker Images to Amazon ECR:
+### 2. Push Docker Images to Amazon ECR:
 
-   - Build Docker images for the frontend and backend.
+   - **Build Docker images** for the frontend and backend.
 
-   - Create an Amazon ECR repository for each image.
+   - **Create an Amazon ECR repository** for each image.
+     > REPO=frontend
+     > aws ecr describe-repositories --repository-names $REPO --region $AWS_REGION >/dev/null 2>&1 || \
+     > aws ecr create-repository --repository-name $REPO --region $AWS_REGION
 
-   - Push the Docker images to their respective ECR repositories.
+    > aws ecr get-login-password --region $AWS_REGION | \
+    > docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+   - **Push the Docker images** to their respective ECR repositories.
 
 Step 3: Version Control
 
