@@ -4,18 +4,27 @@ pipeline {
         AWS_ACCOUNT_ID = '975050024946'
         AWS_REGION = 'ca-central-1'
         IMAGE_REPO_NAME = 'ecr-prad'
-        // Tag the image with the Jenkins build number
         IMAGE_TAG = "build-${BUILD_NUMBER}" 
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        // Reference the Jenkins credential ID for AWS
         AWS_CREDENTIALS_ID = 'prad-aws-credential' 
     }
     stages {
         stage('Checkout Code') {
             steps {
-                // The SCM configuration in the Jenkins job settings handles the branch filtering
                 checkout scm
             }
+        }
+        stage('ECR Login') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',credentialsId: env.AWS_CREDENTIALS_ID,accessKeyVariable: 'AWS_ACCESS_KEY',secretKeyVariable: 'AWS_SECRET_KEY']]) {
+                        sh """
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY_URI}
+                        """
+                    }
+                }
+            }
+
         }
         stage('Build and Push Docker Images - Services') {
             steps {
