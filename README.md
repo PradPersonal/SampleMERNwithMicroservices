@@ -114,20 +114,20 @@ Step 4: Continuous Integration with Jenkins
 1. Set Up Jenkins:
 
    - Install Jenkins on an EC2 instance.
-     > ssh to ec2
-     > sudo su
-     > apt update
-     > apt upgrade -y
-     > apt install openjdk-17-jre-headless
-     > java -version
-     > adduser jenkins   // Full Name []: Jenkins
-     > su - jenkins
-     > id
-     > ssh-keygen -t rsa -b 4096 -m PEM
-     > cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-     > chmod 600 ~/.ssh/authorized_keys
-     > ssh jenkins@localhost
-     > cat /home/jenkins/.ssh/id_rsa
+     > ssh to ec2\
+     > sudo su\
+     > apt update\
+     > apt upgrade -y\
+     > apt install openjdk-17-jre-headless\
+     > java -version\
+     > adduser jenkins   // Full Name []: Jenkins\
+     > su - jenkins\
+     > id\
+     > ssh-keygen -t rsa -b 4096 -m PEM\
+     > cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys\
+     > chmod 600 ~/.ssh/authorized_keys\
+     > ssh jenkins@localhost\
+     > cat /home/jenkins/.ssh/id_rsa\
 
    - Configure Jenkins with necessary plugins.
 
