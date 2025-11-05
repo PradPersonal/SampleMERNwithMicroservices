@@ -13,7 +13,6 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                // The SCM configuration in the Jenkins job settings handles the branch filtering
                 checkout scm
             }
         }
