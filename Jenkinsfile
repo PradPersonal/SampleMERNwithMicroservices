@@ -17,6 +17,60 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Build and Push Docker Images - Services') {
+            steps {
+                script {
+                    def services = ['auth-service', 'ecommerce-service', 'product-service']
+                    
+                    // Build and push each service image in parallel
+                    def build_steps = [:]
+                    for (int i = 0; i < services.size(); i++) {
+                        def service = services[i]
+                        build_steps["build-${service}"] = {
+                            dir("${service}") {
+                                sh "npm install" // Install service-specific dependencies
+                                withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
+                                    // Use the Docker Pipeline plugin build method
+                                    def img = docker.build("${DOCKER_HUB_USER}/${service}:${env.BUILD_ID}") 
+                                    img.push()
+                                    img.push("latest")
+                                    sh "echo 'Built and pushed ${DOCKER_HUB_USER}/${service}:${env.BUILD_ID} and latest'"
+                                }
+                            }
+                        }
+                    }
+                    // Run all service builds in parallel
+                    parallel build_steps
+                }
+            }
+        }
+
+        stage('Build and Push Docker Image - Client') {
+            steps {
+                dir("client") {
+                    withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
+                        // The client service uses a multi-stage Dockerfile
+                        def img = docker.build("${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID}")
+                        img.push()
+                        img.push("latest")
+                        sh "echo 'Built and pushed ${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID} and latest'"
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy Application') {
+            // This stage requires Docker and Docker-Compose to be installed on the target server
+            steps {
+                // Replace 'your_target_server_ip' with the actual IP address or hostname
+                // Replace 'ubuntu' with the correct username for your target server
+                withCredentials([sshUserPrivateKey(credentialsId: 'target-server-ssh', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                    sh "scp -i \$SSH_KEY docker-compose.yml \$SSH_USER@your_target_server_ip:/home/\$SSH_USER/docker-compose.yml"
+                    sh "ssh -i \$SSH_KEY \$SSH_USER@your_target_server_ip 'docker-compose pull && docker-compose up -d'"
+                }
+            }
+        }
+    
         stage('Build Docker Image') {
             steps {
                 script {
