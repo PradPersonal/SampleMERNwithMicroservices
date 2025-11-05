@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION = 'ca-central-1'
         IMAGE_REPO_NAME = 'ecr-prad'
         IMAGE_TAG = "build-${BUILD_NUMBER}" 
-        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+        ECR_REGISTRY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         AWS_CREDENTIALS_ID = 'aws-credential-prad' 
     }
     stages {
