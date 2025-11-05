@@ -22,7 +22,6 @@ pipeline {
                 script {
                     def services = ['auth-service', 'ecommerce-service', 'product-service']
                     
-                    // Build and push each service image in parallel
                     def build_steps = [:]
                     for (int i = 0; i < services.size(); i++) {
                         def service = services[i]
@@ -31,10 +30,14 @@ pipeline {
                                 sh "npm install" // Install service-specific dependencies
                                 withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
                                     // Use the Docker Pipeline plugin build method
-                                    def img = docker.build("${DOCKER_HUB_USER}/${service}:${env.BUILD_ID}") 
-                                    img.push()
-                                    img.push("latest")
-                                    sh "echo 'Built and pushed ${DOCKER_HUB_USER}/${service}:${env.BUILD_ID} and latest'"
+                                    // This block needs 'script' context to use method calls like .push()
+                                    script {
+                                        def img = docker.build("${DOCKER_HUB_USER}/${service}:${env.BUILD_ID}") 
+                                        img.push()
+                                        img.push("latest")
+                                        // Use double quotes for Groovy variable interpolation within sh
+                                        sh "echo 'Built and pushed ${DOCKER_HUB_USER}/${service}:${env.BUILD_ID} and latest'"
+                                    }
                                 }
                             }
                         }
@@ -49,11 +52,14 @@ pipeline {
             steps {
                 dir("client") {
                     withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
-                        // The client service uses a multi-stage Dockerfile
-                        def img = docker.build("${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID}")
-                        img.push()
-                        img.push("latest")
-                        sh "echo 'Built and pushed ${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID} and latest'"
+                        // This block needs 'script' context to use method calls like .push()
+                        script {
+                            // The client service uses a multi-stage Dockerfile
+                            def img = docker.build("${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID}")
+                            img.push()
+                            img.push("latest")
+                            sh "echo 'Built and pushed ${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID} and latest'"
+                        }
                     }
                 }
             }
