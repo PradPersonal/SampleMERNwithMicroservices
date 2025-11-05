@@ -117,7 +117,7 @@ Step 4: Continuous Integration with Jenkins
             created a IAM policy: ecr-access-policy-prad
             created a IAM role:   ecr-access-role-prad
             Created EC2 instance with the role ecr-access-role-prad
-            
+            i-000b2a65fd57a376d (ec2-prad-Jenkins-assign) 
             Connecting to the ec2 instance from local PS
             > sudo apt update -y
             > sudo apt upgrade -y
@@ -147,7 +147,7 @@ Step 4: Continuous Integration with Jenkins
             http://3.99.126.89:8080
             Retrieve the initial admin password from the EC2 instance
             > sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-            228527d9283d4028b218103f20b32f28
+            2f25d59c9efd4cfe8e5baf435ae14c70
             
             Create your first admin user credentials and click Save and Continue:
             user ID: prad-Jenkins
