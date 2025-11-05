@@ -114,22 +114,46 @@ Step 4: Continuous Integration with Jenkins
 1. Set Up Jenkins:
 
    - Install Jenkins on an EC2 instance.
-     > ssh to ec2\
-     > sudo su\
-     > apt update\
-     > apt upgrade -y\
-     > apt install openjdk-17-jre-headless\
-     > java -version\
-     > adduser jenkins   // Full Name []: Jenkins\
-     > su - jenkins\
-     > id\
-     > ssh-keygen -t rsa -b 4096 -m PEM\
-     > cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys\
-     > chmod 600 ~/.ssh/authorized_keys\
-     > ssh jenkins@localhost\
-     > cat /home/jenkins/.ssh/id_rsa\
+            created a IAM policy: ecr-access-policy-prad
+            created a IAM role:   ecr-access-role-prad
+            Created EC2 instance with the role ecr-access-role-prad
+            
+            Connecting to the ec2 instance from local PS
+            
+            > sudo wget -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+            > echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" https://pkg.jenkins.io/debian binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+            > sudo apt update -y
+            > sudo apt install jenkins -y
+            
+            Install Docker:
+            > sudo apt install docker.io -y
+            
+            Add the ubuntu and jenkins users to the docker group so they can run Docker commands without sudo:
+            > sudo usermod -aG docker ubuntu
+            > sudo usermod -aG docker jenkins
+            
+            Restart Jenkins service to apply group changes and ensure Docker is running:
+            > sudo systemctl restart docker
+            > sudo systemctl enable docker
+            > sudo systemctl restart Jenkins
+            Log out and log back in to your SSH session to pick up the new docker group permissions:
+            > exit
+            > <ssh to instance>
+            
+            Access the Jenkins Web UI:
+            http://<your_instance_public_ip>:8080
+            http://3.99.126.89:8080
+            Retrieve the initial admin password from the EC2 instance
+            > sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+            228527d9283d4028b218103f20b32f28
+            
+            Create your first admin user credentials and click Save and Continue:
+            user ID: prad-Jenkins
+            Jenkins URL: http://3.99.126.89:8080/
 
    - Configure Jenkins with necessary plugins.
+   - - Added Plugin for Docker Pipeline
+   - - Added Plugin for AWS Credential
 
 2. Create Jenkins Jobs:
 
