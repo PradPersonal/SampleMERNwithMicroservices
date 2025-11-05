@@ -14,18 +14,6 @@ pipeline {
                 checkout scm
             }
         }
-        stage('ECR Login') {
-            steps {
-                script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',credentialsId: env.AWS_CREDENTIALS_ID,accessKeyVariable: 'AWS_ACCESS_KEY',secretKeyVariable: 'AWS_SECRET_KEY']]) {
-                        sh """
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY_URI}
-                        """
-                    }
-                }
-            }
-
-        }
         stage('Build and Push Docker Images - Services') {
             steps {
                 script {
