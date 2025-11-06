@@ -20,15 +20,13 @@ pipeline {
         stage('Build and Push Docker Image - Frontend') {
             steps {
                 dir("frontend") {
-                    docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
-                        script {
-                            // Build the frontend image
+                    script {
+                        docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
                             def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
                             echo "Pushing image to ECR..."
                             img.push()
                             img.push("latest")
                             sh "echo 'Built and pushed ${ECR_REGISTRY_URI}:${IMAGE_TAG} and latest'"
-                            //docker.image("${ECR_REGISTRY_URI}:${IMAGE_TAG}").push()
                         }
                     }
                 }
