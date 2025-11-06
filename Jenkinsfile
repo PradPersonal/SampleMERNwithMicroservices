@@ -1,69 +1,87 @@
 pipeline {
     agent any
+    tools {
+        // Replace 'node18' with the name of your NodeJS tool configuration in Jenkins
+        nodejs 'node18' 
+    }
+    
     environment {
         AWS_ACCOUNT_ID = '975050024946'
         AWS_REGION = 'ca-central-1'
         IMAGE_REPO_NAME = 'ecr-prad'
         IMAGE_TAG = "build-${BUILD_NUMBER}" 
         ECR_REGISTRY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        AWS_CREDENTIALS_ID = 'aws-credential-prad' 
+        AWS_CREDENTIALS_ID = 'aws-credential-prad'
+        DOCKER_HUB_USER = "your_dockerhub_username" 
     }
+
     stages {
-        stage('Checkout Code') {
+        stage('Clone Repository') {
             steps {
-                checkout scm
+                // Jenkins SCM checkout happens automatically before the pipeline starts
+                echo 'Repository cloned.'
             }
         }
-        stage('Build and Push Docker Images - Services') {
+        
+        stage('Build and Push Docker Images - Backend Services') {
             steps {
                 script {
-                    def services = ['auth-service', 'ecommerce-service', 'product-service']
+                    def backendServices = ['helloservice', 'profileservice']
                     
                     def build_steps = [:]
-                    for (int i = 0; i < services.size(); i++) {
-                        def service = services[i]
-                        build_steps["build-${service}"] = {
-                            dir("${service}") {
-                                sh "npm install" // Install service-specific dependencies
+                    for (int i = 0; i < backendServices.size(); i++) {
+                        def serviceName = backendServices[i]
+                        
+                        if(serviceName == 'helloservice'){
+                            def serviceDir = "helloService"
+                        }
+                        if(serviceName == 'profileservice'){
+                            def serviceDir = "profileService"
+                        }
+                        build_steps["build-${serviceName}"] = {
+                            dir("backend/${serviceDir}") {
+                                sh "npm install"
                                 withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
-                                    // Use the Docker Pipeline plugin build method
-                                    // This block needs 'script' context to use method calls like .push()
                                     script {
-                                        def img = docker.build("${DOCKER_HUB_USER}/${service}:${env.BUILD_ID}") 
+                                        // Build the image using the DOCKERFILE in the directory, tagging with the serviceName
+                                        def img = docker.build("${DOCKER_HUB_USER}/${serviceName}:${env.BUILD_ID}") 
                                         img.push()
                                         img.push("latest")
-                                        // Use double quotes for Groovy variable interpolation within sh
-                                        sh "echo 'Built and pushed ${DOCKER_HUB_USER}/${service}:${env.BUILD_ID} and latest'"
+                                        sh "echo 'Built and pushed ${DOCKER_HUB_USER}/${serviceName}:${env.BUILD_ID} and latest'"
                                     }
                                 }
                             }
                         }
                     }
-                    // Run all service builds in parallel
+                    // Run both service builds in parallel
                     parallel build_steps
                 }
             }
         }
 
-        stage('Build and Push Docker Image - Client') {
+        stage('Build and Push Docker Image - Frontend') {
             steps {
-                dir("client") {
+                dir("frontend") {
                     withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
-                        // This block needs 'script' context to use method calls like .push()
                         script {
-                            // The client service uses a multi-stage Dockerfile
-                            def img = docker.build("${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID}")
+                            // Build the frontend image
+                            def img = docker.build("${DOCKER_HUB_USER}/mern-frontend:${env.BUILD_ID}")
                             img.push()
                             img.push("latest")
-                            sh "echo 'Built and pushed ${DOCKER_HUB_USER}/mern-client:${env.BUILD_ID} and latest'"
+                            sh "echo 'Built and pushed ${DOCKER_HUB_USER}/mern-frontend:${env.BUILD_ID} and latest'"
                         }
                     }
                 }
             }
         }
         
-        stage('Deploy Application') {
-            // This stage requires Docker and Docker-Compose to be installed on the target server
+        stage('Deploy Application (Optional)') {
+            // This stage is commented out by default. Uncomment it to enable deployment.
+            // Requires a docker-compose.yml file that references the built images 
+            // (${DOCKER_HUB_USER}/helloService-1, ${DOCKER_HUB_USER}/helloService-2, ${DOCKER_HUB_USER}/mern-frontend)
+            // and SSH credentials configured in Jenkins ('target-server-ssh').
+
+            /*
             steps {
                 // Replace 'your_target_server_ip' with the actual IP address or hostname
                 // Replace 'ubuntu' with the correct username for your target server
@@ -72,41 +90,13 @@ pipeline {
                     sh "ssh -i \$SSH_KEY \$SSH_USER@your_target_server_ip 'docker-compose pull && docker-compose up -d'"
                 }
             }
+            */
         }
-    
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Build the image using the Dockerfile in the current directory
-                    docker.build("${IMAGE_REPO_NAME}:${IMAGE_TAG}") 
-                }
-            }
-        }
-        stage('Login to AWS ECR') {
-            steps {
-                script {
-                    // Use the withAWS step to handle authentication using the configured credentials
-                    awsCredentials(credentialsId: AWS_CREDENTIALS_ID) {
-                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}"
-                    }
-                }
-            }
-        }
-        stage('Tag and Push to ECR') {
-            steps {
-                script {
-                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:${IMAGE_TAG}"
-                    sh "docker push ${REPOSITORY_URI}:${IMAGE_TAG}"
-                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:latest"
-                    sh "docker push ${REPOSITORY_URI}:latest"
-                }
-            }
-        }
-        stage('Clean up') {
-            steps {
-                // Optional: remove the local image to save space on the Jenkins agent
-                sh "docker rmi ${REPOSITORY_URI}:${IMAGE_TAG} ${REPOSITORY_URI}:latest"
-            }
+    }
+    post {
+        always {
+            // Clean up local Docker images after pipeline execution to save space
+            sh 'docker image prune -af'
         }
     }
 }
