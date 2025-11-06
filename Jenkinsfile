@@ -17,22 +17,6 @@ pipeline {
                 echo 'Repository cloned.'
             }
         }
-        stage('Build and Push Docker Image - Frontend') {
-            steps {
-                dir("frontend") {
-                    script {
-                        echo "Building image started..."
-                        def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
-                        echo "Building image completed..."
-                        docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
-                            img.push()
-                            img.push("latest")
-                            sh "echo 'Built and pushed ${ECR_REGISTRY_URI}:${IMAGE_TAG} and latest'"
-                        }
-                    }
-                }
-            }
-        }
         stage('Build and Push Docker Images - Backend Services') {
             steps {
                 script {
@@ -65,6 +49,22 @@ pipeline {
                     }
                     // Run both service builds in parallel
                     parallel build_steps
+                }
+            }
+        }
+        stage('Build and Push Docker Image - Frontend') {
+            steps {
+                dir("frontend") {
+                    script {
+                        echo "Building image started..."
+                        def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
+                        echo "Building image completed..."
+                        docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
+                            img.push()
+                            img.push("latest")
+                            sh "echo 'Built and pushed ${ECR_REGISTRY_URI}:${IMAGE_TAG} and latest'"
+                        }
+                    }
                 }
             }
         }
