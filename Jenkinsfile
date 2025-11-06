@@ -32,6 +32,7 @@ pipeline {
                         if(serviceName == 'profileservice'){
                             def serviceDir = "profileService"
                         }
+                        echo "Build started"
                         build_steps["build-${serviceName}"] = {
                             dir("backend/${serviceDir}") {
                                 sh "npm install"
