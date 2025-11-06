@@ -1,10 +1,5 @@
 pipeline {
     agent any
-    tools {
-        // Replace 'node18' with the name of your NodeJS tool configuration in Jenkins
-        nodejs 'node18' 
-    }
-    
     environment {
         AWS_ACCOUNT_ID = '975050024946'
         AWS_REGION = 'ca-central-1'
