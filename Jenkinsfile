@@ -22,7 +22,23 @@ pipeline {
                 echo 'Repository cloned.'
             }
         }
-        
+        stage('Build and Push Docker Image - Frontend') {
+            steps {
+                dir("frontend") {
+                    withCredentials("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
+                        script {
+                            // Build the frontend image
+                            def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
+                            echo "Pushing image to ECR..."
+                            img.push()
+                            img.push("latest")
+                            sh "echo 'Built and pushed ${ECR_REGISTRY_URI}:${IMAGE_TAG} and latest'"
+                            //docker.image("${ECR_REGISTRY_URI}:${IMAGE_TAG}").push()
+                        }
+                    }
+                }
+            }
+        }
         stage('Build and Push Docker Images - Backend Services') {
             steps {
                 script {
@@ -57,40 +73,6 @@ pipeline {
                     parallel build_steps
                 }
             }
-        }
-
-        stage('Build and Push Docker Image - Frontend') {
-            steps {
-                dir("frontend") {
-                    withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
-                        script {
-                            // Build the frontend image
-                            def img = docker.build("${DOCKER_HUB_USER}/mern-frontend:${env.BUILD_ID}")
-                            img.push()
-                            img.push("latest")
-                            sh "echo 'Built and pushed ${DOCKER_HUB_USER}/mern-frontend:${env.BUILD_ID} and latest'"
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy Application (Optional)') {
-            // This stage is commented out by default. Uncomment it to enable deployment.
-            // Requires a docker-compose.yml file that references the built images 
-            // (${DOCKER_HUB_USER}/helloService-1, ${DOCKER_HUB_USER}/helloService-2, ${DOCKER_HUB_USER}/mern-frontend)
-            // and SSH credentials configured in Jenkins ('target-server-ssh').
-
-            /*
-            steps {
-                // Replace 'your_target_server_ip' with the actual IP address or hostname
-                // Replace 'ubuntu' with the correct username for your target server
-                withCredentials([sshUserPrivateKey(credentialsId: 'target-server-ssh', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
-                    sh "scp -i \$SSH_KEY docker-compose.yml \$SSH_USER@your_target_server_ip:/home/\$SSH_USER/docker-compose.yml"
-                    sh "ssh -i \$SSH_KEY \$SSH_USER@your_target_server_ip 'docker-compose pull && docker-compose up -d'"
-                }
-            }
-            */
         }
     }
     post {
