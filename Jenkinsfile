@@ -25,8 +25,6 @@ pipeline {
                         def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
                         echo "Building image completed..."
                         docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
-                            
-                            
                             echo "Pushing image to ECR..."
                             img.push()
                             img.push("latest")
