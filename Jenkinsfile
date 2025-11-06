@@ -60,15 +60,6 @@ pipeline {
                                     img.push("latest")
                                     sh "echo 'Built and pushed ${ECR_REGISTRY_URI}:${IMAGE_TAG} and latest'"
                                 }
-                                withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
-                                    script {
-                                        // Build the image using the DOCKERFILE in the directory, tagging with the serviceName
-                                        def img = docker.build("${DOCKER_HUB_USER}/${serviceName}:${env.BUILD_ID}") 
-                                        img.push()
-                                        img.push("latest")
-                                        sh "echo 'Built and pushed ${DOCKER_HUB_USER}/${serviceName}:${env.BUILD_ID} and latest'"
-                                    }
-                                }
                             }
                         }
                     }
