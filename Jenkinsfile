@@ -20,7 +20,7 @@ pipeline {
         stage('Build and Push Docker Image - Frontend') {
             steps {
                 dir("frontend") {
-                    withCredentials("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
+                    docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
                         script {
                             // Build the frontend image
                             def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
