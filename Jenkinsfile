@@ -21,6 +21,7 @@ pipeline {
             steps {
                 dir("frontend") {
                     script {
+                        echo "Building image started..."
                         docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
                             def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
                             echo "Pushing image to ECR..."
