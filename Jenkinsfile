@@ -32,9 +32,9 @@ pipeline {
                         if(serviceName == 'profileservice'){
                             def serviceDir = "profileService"
                         }
-                        echo "Build started"
                         build_steps["build-${serviceName}"] = {
                             dir("backend/${serviceDir}") {
+                                echo "Build started"
                                 sh "npm install"
                                 echo "Building image started..."
                                 def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
