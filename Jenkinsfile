@@ -25,7 +25,6 @@ pipeline {
                         def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
                         echo "Building image completed..."
                         docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
-                            echo "Pushing image to ECR..."
                             img.push()
                             img.push("latest")
                             sh "echo 'Built and pushed ${ECR_REGISTRY_URI}:${IMAGE_TAG} and latest'"
@@ -52,6 +51,15 @@ pipeline {
                         build_steps["build-${serviceName}"] = {
                             dir("backend/${serviceDir}") {
                                 sh "npm install"
+                                echo "Building image started..."
+                                def img = docker.build("${ECR_REGISTRY_URI}:${IMAGE_TAG}", ".")
+                                echo "Building image completed..."
+                                docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", "ecr:${AWS_REGION}:${AWS_CREDENTIALS_ID}") {
+                                    echo "Pushing image to ECR..."
+                                    img.push()
+                                    img.push("latest")
+                                    sh "echo 'Built and pushed ${ECR_REGISTRY_URI}:${IMAGE_TAG} and latest'"
+                                }
                                 withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'DOCKER_HUB_PASS', usernameVariable: 'DOCKER_HUB_USER')]) {
                                     script {
                                         // Build the image using the DOCKERFILE in the directory, tagging with the serviceName
